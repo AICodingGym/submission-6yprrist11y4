@@ -3099,7 +3099,12 @@ class DataArray(AbstractArray, DataWithCoords, DataArrayArithmetic):
         coords, indexes = self.coords._merge_raw(other_coords, reflexive)
         name = self._result_name(other)
 
-        return self._replace(variable, coords, name, indexes=indexes)
+        result = self._replace(variable, coords, name, indexes=indexes)
+        # Variable arithmetic drops attrs by default, which strips them off
+        # comparisons such as `data == 1` before where() can see them.
+        if _get_keep_attrs(default=True):
+            result.attrs = dict(self.attrs)
+        return result
 
     def _inplace_binary_op(self, other, f: Callable):
         if isinstance(other, groupby.GroupBy):
